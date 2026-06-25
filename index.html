@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connect Four — AI Edition</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-icon">
+        <span class="disc red"></span>
+        <span class="disc yellow"></span>
+      </div>
+      <h1 class="logo-title">CONNECT<span>FOUR</span></h1>
+    </div>
+    <div class="header-right">
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MAIN LAYOUT
+  ═══════════════════════════════════════════════════════ -->
+  <main class="app-main">
+
+    <!-- LEFT PANEL: Settings & Score -->
+    <aside class="panel left-panel">
+      <section class="settings-card card">
+        <h2 class="card-title">GAME SETUP</h2>
+
+        <div class="setting-group">
+          <label class="setting-label">Mode</label>
+          <div class="toggle-group">
+            <button class="mode-btn active" data-mode="pvp">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+              PVP
+            </button>
+            <button class="mode-btn" data-mode="pva">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="10" r="3"/></svg>
+              VS AI
+            </button>
+          </div>
+        </div>
+
+        <div class="setting-group" id="difficultyGroup" style="display:none">
+          <label class="setting-label">Difficulty</label>
+          <div class="difficulty-group">
+            <button class="diff-btn" data-diff="easy">Easy</button>
+            <button class="diff-btn active" data-diff="medium">Medium</button>
+            <button class="diff-btn" data-diff="hard">Hard</button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Player 1 Name</label>
+          <input type="text" id="p1Name" class="name-input" value="Player 1" maxlength="12" />
+        </div>
+        <div class="setting-group" id="p2NameGroup">
+          <label class="setting-label">Player 2 Name</label>
+          <input type="text" id="p2Name" class="name-input" value="Player 2" maxlength="12" />
+        </div>
+
+        <button id="startBtn" class="btn-primary">START GAME</button>
+      </section>
+
+      <!-- Scoreboard -->
+      <section class="score-card card">
+        <h2 class="card-title">SCOREBOARD</h2>
+        <div class="score-grid">
+          <div class="score-item red-score">
+            <div class="score-name" id="scoreP1Name">Player 1</div>
+            <div class="score-value" id="scoreP1">0</div>
+          </div>
+          <div class="score-divider">VS</div>
+          <div class="score-item yellow-score">
+            <div class="score-name" id="scoreP2Name">Player 2</div>
+            <div class="score-value" id="scoreP2">0</div>
+          </div>
+        </div>
+        <div class="draws-row">Draws: <span id="scoreDraws">0</span></div>
+      </section>
+
+      <!-- AI Info -->
+      <section class="ai-card card" id="aiInfoCard" style="display:none">
+        <h2 class="card-title">AI ENGINE</h2>
+        <div class="ai-stats">
+          <div class="ai-stat">
+            <span class="stat-label">Algorithm</span>
+            <span class="stat-val">Minimax α-β</span>
+          </div>
+          <div class="ai-stat">
+            <span class="stat-label">Depth</span>
+            <span class="stat-val" id="aiDepthDisplay">5</span>
+          </div>
+          <div class="ai-stat">
+            <span class="stat-label">Nodes</span>
+            <span class="stat-val" id="aiNodes">—</span>
+          </div>
+          <div class="ai-stat">
+            <span class="stat-label">Time (ms)</span>
+            <span class="stat-val" id="aiTime">—</span>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- CENTER: Game Board -->
+    <section class="board-section">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <div class="turn-indicator" id="turnIndicator">
+          <div class="turn-disc" id="turnDisc"></div>
+          <span id="turnText">Press Start to Play</span>
+        </div>
+      </div>
+
+      <!-- Column Hover Arrows -->
+      <div class="column-arrows" id="columnArrows">
+        <div class="col-arrow" data-col="0">▼</div>
+        <div class="col-arrow" data-col="1">▼</div>
+        <div class="col-arrow" data-col="2">▼</div>
+        <div class="col-arrow" data-col="3">▼</div>
+        <div class="col-arrow" data-col="4">▼</div>
+        <div class="col-arrow" data-col="5">▼</div>
+        <div class="col-arrow" data-col="6">▼</div>
+      </div>
+
+      <!-- The Board -->
+      <div class="board-wrapper">
+        <div class="board" id="board"></div>
+      </div>
+
+      <!-- Game Controls -->
+      <div class="game-controls">
+        <button id="resetBtn" class="btn-secondary">↺ RESET</button>
+        <button id="undoBtn" class="btn-secondary">← UNDO</button>
+        <button id="soundBtn" class="icon-btn" title="Toggle Sound">
+          <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Move History & Minimax Tree -->
+    <aside class="panel right-panel">
+      <section class="card history-card">
+        <h2 class="card-title">MOVE LOG</h2>
+        <div class="move-log" id="moveLog">
+          <div class="log-placeholder">Game moves appear here…</div>
+        </div>
+      </section>
+
+      <section class="card tree-card" id="treeCard" style="display:none">
+        <h2 class="card-title">MINIMAX TREE</h2>
+        <p class="tree-caption">Last AI decision snapshot (top 3 branches)</p>
+        <div class="tree-viz" id="treeViz"></div>
+      </section>
+    </aside>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════
+       WIN OVERLAY
+  ═══════════════════════════════════════════════════════ -->
+  <div class="overlay" id="overlay" hidden>
+    <div class="overlay-card">
+      <div class="overlay-icon" id="overlayIcon">🏆</div>
+      <div class="overlay-title" id="overlayTitle">Player 1 Wins!</div>
+      <div class="overlay-subtitle" id="overlaySubtitle">Brilliant game!</div>
+      <div class="overlay-actions">
+        <button class="btn-primary" id="overlayRestart">Play Again</button>
+        <button class="btn-secondary" id="overlayMenu">Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Context (no external files) -->
+  <script>
+    window.AudioCtx = null;
+    function getAudio() {
+      if (!window.AudioCtx) window.AudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return window.AudioCtx;
+    }
+    function playTone(freq, type='sine', duration=0.12, gain=0.3) {
+      try {
+        const ctx = getAudio();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = type; osc.frequency.value = freq;
+        g.gain.setValueAtTime(gain, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.start(); osc.stop(ctx.currentTime + duration);
+      } catch(e){}
+    }
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>
